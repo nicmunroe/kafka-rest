@@ -15,9 +15,21 @@
 
 package io.confluent.kafkarest.entities;
 
+import org.apache.kafka.common.header.Header;
+import org.apache.kafka.common.header.Headers;
+import org.apache.kafka.common.header.internals.RecordHeader;
+import org.apache.kafka.common.header.internals.RecordHeaders;
+
+import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.Objects;
 import java.util.StringJoiner;
+import java.util.stream.Collectors;
+
 import javax.annotation.Nullable;
+import javax.validation.constraints.NotNull;
+
+import io.confluent.kafkarest.entities.v2.ProduceRecordHeaders;
 
 public final class ProduceRecord<K, V> {
 
@@ -30,10 +42,37 @@ public final class ProduceRecord<K, V> {
   @Nullable
   private final Integer partition;
 
-  public ProduceRecord(@Nullable K key, @Nullable V value, @Nullable Integer partition) {
+  @NotNull
+  private final Headers headers;
+
+  public ProduceRecord(
+      @Nullable K key,
+      @Nullable V value,
+      @Nullable Integer partition,
+      @Nullable List<ProduceRecordHeaders> headers
+  ) {
     this.key = key;
     this.value = value;
     this.partition = partition;
+    this.headers = convertHeaders(headers);
+  }
+
+  private @NotNull Headers convertHeaders(@Nullable List<ProduceRecordHeaders> headers) {
+    if (headers == null) {
+      return new RecordHeaders();
+    }
+
+    List<Header> convertedHeaders = headers
+        .stream()
+        .map(prh -> {
+          byte[] valueBytes = (prh.getValue() != null)
+                              ? prh.getValue().getBytes(StandardCharsets.UTF_8)
+                              : prh.getBinValue();
+          return new RecordHeader(prh.getKey(), valueBytes);
+        })
+        .collect(Collectors.toList());
+
+    return new RecordHeaders(convertedHeaders);
   }
 
   @Nullable
@@ -51,6 +90,11 @@ public final class ProduceRecord<K, V> {
     return partition;
   }
 
+  @NotNull
+  public Headers getHeaders() {
+    return headers;
+  }
+
   @Override
   public boolean equals(Object o) {
     if (this == o) {
@@ -62,12 +106,13 @@ public final class ProduceRecord<K, V> {
     ProduceRecord<?, ?> that = (ProduceRecord<?, ?>) o;
     return Objects.equals(key, that.key)
         && Objects.equals(value, that.value)
-        && Objects.equals(partition, that.partition);
+        && Objects.equals(partition, that.partition)
+        && Objects.equals(headers, that.headers);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(key, value, partition);
+    return Objects.hash(key, value, partition, headers);
   }
 
   @Override
@@ -76,6 +121,7 @@ public final class ProduceRecord<K, V> {
         .add("key=" + key)
         .add("value=" + value)
         .add("partition=" + partition)
+        .add("headers=" + headers)
         .toString();
   }
 }

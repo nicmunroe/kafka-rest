@@ -68,7 +68,8 @@ public final class JsonTopicProduceRequest {
     }
     return new ProduceRequest<>(
         records.stream()
-            .map(record -> new ProduceRecord<>(record.key, record.value, record.partition))
+               // TODO: Support headers for v1, or no?
+            .map(record -> new ProduceRecord<>(record.key, record.value, record.partition, null))
             .collect(Collectors.toList()),
         /* keySchema= */ null,
         /* keySchemaId= */ null,

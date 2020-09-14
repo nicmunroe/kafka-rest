@@ -44,7 +44,7 @@ public class NoSchemaRestProducer<K, V> implements RestProducer<K, V> {
         recordPartition = record.getPartition();
       }
       producer.send(
-          new ProducerRecord<>(topic, recordPartition, record.getKey(), record.getValue()),
+          new ProducerRecord<>(topic, recordPartition, record.getKey(), record.getValue(), record.getHeaders()),
           task.createCallback()
       );
     }

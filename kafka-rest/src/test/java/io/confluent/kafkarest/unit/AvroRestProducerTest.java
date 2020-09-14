@@ -67,7 +67,7 @@ public class AvroRestProducerTest {
     schemaHolder =
         new ProduceRequest<>(
             Collections.singletonList(
-                new ProduceRecord<>(mapper.readTree("{}"), mapper.readTree("{}"), null)),
+                new ProduceRecord<>(mapper.readTree("{}"), mapper.readTree("{}"), null, null)),
             /* keySchema= */ null,
             /* keySchemaId= */ null,
             "invalidValueSchema",
@@ -84,7 +84,7 @@ public class AvroRestProducerTest {
     schemaHolder =
         new ProduceRequest<>(
             Collections.singletonList(
-                new ProduceRecord<>(null, mapper.readTree("\"string\""), null)),
+                new ProduceRecord<>(null, mapper.readTree("\"string\""), null, null)),
             /* keySchema= */ null,
             /* keySchemaId= */ null,
             /* valueSchema= */ "\"int\"",
@@ -130,7 +130,7 @@ public class AvroRestProducerTest {
     schemaHolder =
         new ProduceRequest<>(
             Collections.singletonList(
-                new ProduceRecord<>(null, mapper.readTree("{\"name\": \"bob\"}"), null)),
+                new ProduceRecord<>(null, mapper.readTree("{\"name\": \"bob\"}"), null, null)),
             /* keySchema= */ null,
             /* keySchemaId= */ null,
             valueSchemaStr,

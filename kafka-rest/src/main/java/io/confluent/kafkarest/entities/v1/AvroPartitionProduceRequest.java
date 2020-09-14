@@ -109,7 +109,8 @@ public final class AvroPartitionProduceRequest {
     }
     return new ProduceRequest<>(
         records.stream()
-            .map(record -> new ProduceRecord<>(record.key, record.value, null))
+               // TODO: Support headers?
+            .map(record -> new ProduceRecord<>(record.key, record.value, null, null))
             .collect(Collectors.toList()),
         keySchema,
         keySchemaId,

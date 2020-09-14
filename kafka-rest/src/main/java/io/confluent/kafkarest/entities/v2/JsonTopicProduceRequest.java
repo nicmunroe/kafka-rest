@@ -68,7 +68,7 @@ public final class JsonTopicProduceRequest {
     }
     return new ProduceRequest<>(
         records.stream()
-            .map(record -> new ProduceRecord<>(record.key, record.value, record.partition))
+            .map(record -> new ProduceRecord<>(record.key, record.value, record.partition, record.headers))
             .collect(Collectors.toList()),
         /* keySchema= */ null,
         /* keySchemaId= */ null,
@@ -112,15 +112,20 @@ public final class JsonTopicProduceRequest {
     @Nullable
     private final Integer partition;
 
+    @Nullable
+    private final List<ProduceRecordHeaders> headers;
+
     @JsonCreator
     public JsonTopicProduceRecord(
         @JsonProperty("key") @Nullable Object key,
         @JsonProperty("value") @Nullable Object value,
-        @JsonProperty("partition") @Nullable Integer partition
+        @JsonProperty("partition") @Nullable Integer partition,
+        @JsonProperty("headers") @Nullable List<ProduceRecordHeaders> headers
     ) {
       this.key = key;
       this.value = value;
       this.partition = partition;
+      this.headers = headers;
     }
 
     @JsonProperty("key")
@@ -141,6 +146,12 @@ public final class JsonTopicProduceRequest {
       return partition;
     }
 
+    @JsonProperty("headers")
+    @Nullable
+    public List<ProduceRecordHeaders> getHeaders() {
+      return headers;
+    }
+
     @Override
     public boolean equals(Object o) {
       if (this == o) {
@@ -152,12 +163,13 @@ public final class JsonTopicProduceRequest {
       JsonTopicProduceRecord that = (JsonTopicProduceRecord) o;
       return Objects.equals(key, that.key)
           && Objects.equals(value, that.value)
-          && Objects.equals(partition, that.partition);
+          && Objects.equals(partition, that.partition)
+          && Objects.equals(headers, that.headers);
     }
 
     @Override
     public int hashCode() {
-      return Objects.hash(key, value, partition);
+      return Objects.hash(key, value, partition, headers);
     }
 
     @Override
@@ -166,6 +178,7 @@ public final class JsonTopicProduceRequest {
           .add("key=" + key)
           .add("value=" + value)
           .add("partition=" + partition)
+          .add("headers=" + headers)
           .toString();
     }
   }

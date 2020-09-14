@@ -110,7 +110,8 @@ public final class SchemaTopicProduceRequest {
     }
     return new ProduceRequest<>(
         records.stream()
-            .map(record -> new ProduceRecord<>(record.key, record.value, record.partition))
+               // TODO: Support headers?
+            .map(record -> new ProduceRecord<>(record.key, record.value, record.partition, null))
             .collect(Collectors.toList()),
         keySchema,
         keySchemaId,
