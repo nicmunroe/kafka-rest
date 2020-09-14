@@ -17,6 +17,7 @@ package io.confluent.kafkarest.extension;
 
 import io.confluent.kafkarest.AdminClientWrapper;
 import io.confluent.kafkarest.DefaultKafkaRestContext;
+import io.confluent.kafkarest.distributedtracing.FooDistributedTracingHelper;
 import io.confluent.kafkarest.KafkaRestConfig;
 import io.confluent.kafkarest.KafkaRestContext;
 import io.confluent.kafkarest.ProducerPool;
@@ -41,7 +42,8 @@ public class KafkaRestContextProvider {
       ProducerPool producerPool,
       KafkaConsumerManager kafkaConsumerManager,
       AdminClientWrapper adminClientWrapper,
-      ScalaConsumersContext scalaConsumersContext
+      ScalaConsumersContext scalaConsumersContext,
+      FooDistributedTracingHelper dtHelper
   ) {
     if (initialized.compareAndSet(false, true)) {
 
@@ -51,7 +53,7 @@ public class KafkaRestContextProvider {
       }
       defaultContext =
           new DefaultKafkaRestContext(appConfig, producerPool, kafkaConsumerManager,
-              adminClientWrapper, scalaConsumersContext);
+              adminClientWrapper, scalaConsumersContext, dtHelper);
       defaultAppConfig = appConfig;
     }
   }

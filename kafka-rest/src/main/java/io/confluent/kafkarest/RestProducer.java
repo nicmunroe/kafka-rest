@@ -17,6 +17,8 @@ package io.confluent.kafkarest;
 
 import java.util.Collection;
 
+import javax.ws.rs.container.ContainerRequestContext;
+
 import io.confluent.kafkarest.entities.ProduceRecord;
 
 /**
@@ -30,7 +32,8 @@ public interface RestProducer<K, V> {
    * the SchemaHolder is updated with the resulting IDs.
    */
   public void produce(ProduceTask task, String topic, Integer partition,
-                      Collection<? extends ProduceRecord<K, V>> records);
+                      Collection<? extends ProduceRecord<K, V>> records,
+                      ContainerRequestContext containerRequest, KafkaRestContext ctx);
 
   public void close();
 }

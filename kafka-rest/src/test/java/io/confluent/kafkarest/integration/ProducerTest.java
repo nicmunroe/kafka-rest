@@ -18,10 +18,13 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+import io.confluent.kafkarest.DefaultKafkaRestContext;
 import io.confluent.kafkarest.KafkaRestConfig;
+import io.confluent.kafkarest.KafkaRestContext;
 import io.confluent.kafkarest.ProducerPool;
 import io.confluent.kafkarest.RecordMetadataOrException;
 import io.confluent.kafkarest.Versions;
+import io.confluent.kafkarest.distributedtracing.FooDTHelperNoOpImpl;
 import io.confluent.kafkarest.entities.EmbeddedFormat;
 import io.confluent.kafkarest.entities.v1.BinaryPartitionProduceRequest;
 import io.confluent.kafkarest.entities.v1.BinaryPartitionProduceRequest.BinaryPartitionProduceRecord;
@@ -33,10 +36,12 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
 import javax.ws.rs.client.Entity;
+import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.core.Response;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.errors.RecordTooLargeException;
 import org.apache.kafka.common.serialization.ByteArrayDeserializer;
+import org.easymock.EasyMock;
 import org.junit.Before;
 import org.junit.Test;
 import scala.collection.JavaConversions;
@@ -45,6 +50,7 @@ public class ProducerTest
     extends AbstractProducerTest<BinaryTopicProduceRequest, BinaryPartitionProduceRequest> {
 
   private static final String topicName = "topic1";
+  private KafkaRestContext ctx;
 
   // Produce to topic inputs & results
 
@@ -132,6 +138,10 @@ public class ProducerTest
     kafka.utils.TestUtils.createTopic(zkClient, topicName, numPartitions, replicationFactor,
                                       JavaConversions.asScalaBuffer(this.servers),
                                       new Properties());
+    ctx = new DefaultKafkaRestContext(
+        new KafkaRestConfig(), EasyMock.createMock(ProducerPool.class), null, null, null,
+        new FooDTHelperNoOpImpl()
+    );
   }
 
   // This should really be a unit test, but producer settings aren't accessible and any requests
@@ -155,6 +165,8 @@ public class ProducerTest
         0,
         EmbeddedFormat.BINARY,
         request.toProduceRequest(),
+        EasyMock.createMock(ContainerRequestContext.class),
+        ctx,
         new ProducerPool.ProduceRequestCallback() {
           @Override
           public void onCompletion(

@@ -96,7 +96,8 @@ public class PartitionsResourceConsumeTest extends JerseyTest {
           new ScalaConsumersContext(
               /* metadataObserver= */ null,
               /* consumerManager= */ null,
-              simpleConsumerManager));
+              simpleConsumerManager),
+          null);
     } catch (RestConfigException e) {
       throw new RuntimeException(e);
     }

@@ -38,6 +38,9 @@ import org.apache.kafka.common.serialization.Serializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.ws.rs.container.ContainerRequestContext;
+import javax.ws.rs.core.Context;
+
 /**
  * Shared pool of Kafka producers used to send messages. The pool manages batched sends, tracking
  * all required acks for a batch and managing timeouts. Currently this pool only contains one
@@ -196,6 +199,8 @@ public class ProducerPool {
       Integer partition,
       EmbeddedFormat recordFormat,
       ProduceRequest<K, V> produceRequest,
+      ContainerRequestContext containerRequest,
+      KafkaRestContext ctx,
       ProduceRequestCallback callback
   ) {
     ProduceTask task =
@@ -210,7 +215,9 @@ public class ProducerPool {
         task,
         topic,
         partition,
-        produceRequest.getRecords());
+        produceRequest.getRecords(),
+        containerRequest,
+        ctx);
   }
 
   public void shutdown() {

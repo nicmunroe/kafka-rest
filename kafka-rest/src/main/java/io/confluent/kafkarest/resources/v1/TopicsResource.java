@@ -45,7 +45,10 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.container.AsyncResponse;
+import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.Suspended;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -89,11 +92,12 @@ public final class TopicsResource {
   @Consumes({Versions.KAFKA_V1_JSON_BINARY, Versions.KAFKA_V1_JSON,
              Versions.KAFKA_DEFAULT_JSON, Versions.JSON, Versions.GENERIC_REQUEST})
   public void produceBinary(
+      final @Context ContainerRequestContext containerRequest,
       final @Suspended AsyncResponse asyncResponse,
       @PathParam("topic") String topicName,
       @Valid @NotNull BinaryTopicProduceRequest request
   ) {
-    produce(asyncResponse, topicName, EmbeddedFormat.BINARY, request.toProduceRequest());
+    produce(containerRequest, asyncResponse, topicName, EmbeddedFormat.BINARY, request.toProduceRequest());
   }
 
   @POST
@@ -101,11 +105,12 @@ public final class TopicsResource {
   @PerformanceMetric("topic.produce-json")
   @Consumes({Versions.KAFKA_V1_JSON_JSON})
   public void produceJson(
+      final @Context ContainerRequestContext containerRequest,
       final @Suspended AsyncResponse asyncResponse,
       @PathParam("topic") String topicName,
       @Valid @NotNull JsonTopicProduceRequest request
-  ) {
-    produce(asyncResponse, topicName, EmbeddedFormat.JSON, request.toProduceRequest());
+      ) {
+    produce(containerRequest, asyncResponse, topicName, EmbeddedFormat.JSON, request.toProduceRequest());
   }
 
   @POST
@@ -113,16 +118,18 @@ public final class TopicsResource {
   @PerformanceMetric("topic.produce-avro")
   @Consumes({Versions.KAFKA_V1_JSON_AVRO})
   public void produceAvro(
+      final @Context ContainerRequestContext containerRequest,
       final @Suspended AsyncResponse asyncResponse,
       @PathParam("topic") String topicName,
       @Valid @NotNull AvroTopicProduceRequest request
   ) {
     // Validations we can't do generically since they depend on the data format -- schemas need to
     // be available if there are any non-null entries
-    produceSchema(asyncResponse, topicName, request.toProduceRequest(), EmbeddedFormat.AVRO);
+    produceSchema(containerRequest, asyncResponse, topicName, request.toProduceRequest(), EmbeddedFormat.AVRO);
   }
 
   public <K, V> void produce(
+      final ContainerRequestContext containerRequest,
       final AsyncResponse asyncResponse,
       final String topicName,
       final EmbeddedFormat format,
@@ -134,6 +141,8 @@ public final class TopicsResource {
     ctx.getProducerPool().produce(
         topicName, null, format,
         request,
+        containerRequest,
+        ctx,
         new ProducerPool.ProduceRequestCallback() {
           public void onCompletion(
               Integer keySchemaId, Integer valueSchemaId,
@@ -165,6 +174,7 @@ public final class TopicsResource {
   }
 
   private void produceSchema(
+      ContainerRequestContext containerRequest,
       AsyncResponse asyncResponse,
       String topicName,
       ProduceRequest<JsonNode, JsonNode> request,
@@ -172,7 +182,7 @@ public final class TopicsResource {
   ) {
     checkKeySchema(request);
     checkValueSchema(request);
-    produce(asyncResponse, topicName, jsonschema, request);
+    produce(containerRequest, asyncResponse, topicName, jsonschema, request);
   }
 
   private static void checkKeySchema(ProduceRequest<JsonNode, ?> request) {

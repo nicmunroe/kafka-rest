@@ -58,7 +58,9 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.container.AsyncResponse;
+import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.Suspended;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -228,12 +230,14 @@ public final class PartitionsResource {
   @Consumes({Versions.KAFKA_V1_JSON_BINARY, Versions.KAFKA_V1_JSON,
              Versions.KAFKA_DEFAULT_JSON, Versions.JSON, Versions.GENERIC_REQUEST})
   public void produceBinary(
+      final @Context ContainerRequestContext containerRequest,
       final @Suspended AsyncResponse asyncResponse,
       final @PathParam("topic") String topic,
       final @PathParam("partition") int partition,
       @Valid @NotNull BinaryPartitionProduceRequest request
   ) {
     produce(
+        containerRequest,
         asyncResponse,
         topic,
         partition,
@@ -246,12 +250,14 @@ public final class PartitionsResource {
   @PerformanceMetric("partition.produce-json")
   @Consumes({Versions.KAFKA_V1_JSON_JSON})
   public void produceJson(
+      final @Context ContainerRequestContext containerRequest,
       final @Suspended AsyncResponse asyncResponse,
       final @PathParam("topic") String topic,
       final @PathParam("partition") int partition,
       @Valid @NotNull JsonPartitionProduceRequest request
   ) {
     produce(
+        containerRequest,
         asyncResponse,
         topic,
         partition,
@@ -264,6 +270,7 @@ public final class PartitionsResource {
   @PerformanceMetric("partition.produce-avro")
   @Consumes({Versions.KAFKA_V1_JSON_AVRO})
   public void produceAvro(
+      final @Context ContainerRequestContext containerRequest,
       final @Suspended AsyncResponse asyncResponse,
       final @PathParam("topic") String topic,
       final @PathParam("partition") int partition,
@@ -285,6 +292,7 @@ public final class PartitionsResource {
     }
 
     produce(
+        containerRequest,
         asyncResponse,
         topic,
         partition,
@@ -359,6 +367,7 @@ public final class PartitionsResource {
   }
 
   protected <K, V> void produce(
+      final ContainerRequestContext containerRequest,
       final AsyncResponse asyncResponse,
       final String topic,
       final int partition,
@@ -373,6 +382,8 @@ public final class PartitionsResource {
     ctx.getProducerPool().produce(
         topic, partition, format,
         request,
+        containerRequest,
+        ctx,
         new ProducerPool.ProduceRequestCallback() {
           public void onCompletion(
               Integer keySchemaId, Integer valueSchemaId,

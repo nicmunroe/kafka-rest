@@ -86,7 +86,7 @@ public class TopicsResourceBinaryProduceTest
   public TopicsResourceBinaryProduceTest() throws RestConfigException {
     mdObserver = EasyMock.createMock(MetadataObserver.class);
     producerPool = EasyMock.createMock(ProducerPool.class);
-    ctx = new DefaultKafkaRestContext(config, producerPool, null, null, null);
+    ctx = new DefaultKafkaRestContext(config, producerPool, null, null, null, null);
 
     addResource(new TopicsResource(ctx));
 
@@ -184,6 +184,8 @@ public class TopicsResourceBinaryProduceTest
         EasyMock.eq((Integer) null),
         EasyMock.eq(recordFormat),
         EasyMock.anyObject(),
+        EasyMock.anyObject(),
+        EasyMock.eq(ctx),
         EasyMock.capture(produceCallback));
     EasyMock.expectLastCall().andAnswer(new IAnswer<Object>() {
       @Override

@@ -75,6 +75,7 @@ public class PartitionsResourceBinaryProduceTest
         producerPool,
         null,
         adminClientWrapper,
+        null,
         null
     );
 
@@ -129,6 +130,8 @@ public class PartitionsResourceBinaryProduceTest
         EasyMock.eq(partition),
         EasyMock.eq(recordFormat),
         EasyMock.anyObject(),
+        EasyMock.anyObject(),
+        EasyMock.eq(ctx),
         EasyMock.capture(produceCallback));
     EasyMock.expectLastCall().andAnswer(new IAnswer<Object>() {
       @Override

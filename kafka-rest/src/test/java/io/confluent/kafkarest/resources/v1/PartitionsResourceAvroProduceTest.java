@@ -80,6 +80,7 @@ public class PartitionsResourceAvroProduceTest
         producerPool,
         null,
         adminClientWrapper,
+        null,
         null
     );
     addResource(new TopicsResource(ctx));
@@ -125,6 +126,8 @@ public class PartitionsResourceAvroProduceTest
         EasyMock.eq(partition),
         EasyMock.eq(recordFormat),
         EasyMock.anyObject(),
+        EasyMock.anyObject(),
+        EasyMock.eq(ctx),
         EasyMock.capture(produceCallback));
     EasyMock.expectLastCall().andAnswer(new IAnswer<Object>() {
       @Override

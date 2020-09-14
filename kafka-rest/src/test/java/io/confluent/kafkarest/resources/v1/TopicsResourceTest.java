@@ -53,7 +53,7 @@ public class TopicsResourceTest
   public TopicsResourceTest() throws RestConfigException {
     adminClientWrapper = EasyMock.createMock(AdminClientWrapper.class);
     producerPool = EasyMock.createMock(ProducerPool.class);
-    ctx = new DefaultKafkaRestContext(config, producerPool, null, adminClientWrapper, null);
+    ctx = new DefaultKafkaRestContext(config, producerPool, null, adminClientWrapper, null, null);
 
     addResource(new TopicsResource(ctx));
   }

@@ -15,6 +15,7 @@
 
 package io.confluent.kafkarest;
 
+import io.confluent.kafkarest.distributedtracing.FooDistributedTracingHelper;
 import io.confluent.kafkarest.v2.KafkaConsumerManager;
 import org.apache.kafka.clients.admin.AdminClient;
 
@@ -27,6 +28,7 @@ public class DefaultKafkaRestContext implements KafkaRestContext {
 
   private final KafkaRestConfig config;
   private final ScalaConsumersContext scalaConsumersContext;
+  private final FooDistributedTracingHelper dtHelper;
   private ProducerPool producerPool;
   private KafkaConsumerManager kafkaConsumerManager;
   private AdminClientWrapper adminClientWrapper;
@@ -37,7 +39,8 @@ public class DefaultKafkaRestContext implements KafkaRestContext {
       ProducerPool producerPool,
       KafkaConsumerManager kafkaConsumerManager,
       AdminClientWrapper adminClientWrapper,
-      ScalaConsumersContext scalaConsumersContext
+      ScalaConsumersContext scalaConsumersContext,
+      FooDistributedTracingHelper dtHelper
   ) {
 
     this.config = config;
@@ -45,6 +48,7 @@ public class DefaultKafkaRestContext implements KafkaRestContext {
     this.kafkaConsumerManager = kafkaConsumerManager;
     this.adminClientWrapper = adminClientWrapper;
     this.scalaConsumersContext = scalaConsumersContext;
+    this.dtHelper = dtHelper;
   }
 
 
@@ -59,6 +63,11 @@ public class DefaultKafkaRestContext implements KafkaRestContext {
       producerPool = new ProducerPool(config);
     }
     return producerPool;
+  }
+
+  @Override
+  public FooDistributedTracingHelper getDtHelper() {
+    return dtHelper;
   }
 
   @Override

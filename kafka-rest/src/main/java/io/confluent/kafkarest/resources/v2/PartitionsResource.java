@@ -46,7 +46,9 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.container.AsyncResponse;
+import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.Suspended;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -99,12 +101,14 @@ public final class PartitionsResource {
   @PerformanceMetric("partition.produce-binary+v2")
   @Consumes({Versions.KAFKA_V2_JSON_BINARY})
   public void produceBinary(
+      final @Context ContainerRequestContext containerRequest,
       final @Suspended AsyncResponse asyncResponse,
       final @PathParam("topic") String topic,
       final @PathParam("partition") int partition,
       @Valid @NotNull BinaryPartitionProduceRequest request
   )  throws Exception {
     produce(
+        containerRequest,
         asyncResponse,
         topic,
         partition,
@@ -117,12 +121,14 @@ public final class PartitionsResource {
   @PerformanceMetric("partition.produce-json+v2")
   @Consumes({Versions.KAFKA_V2_JSON_JSON})
   public void produceJson(
+      final @Context ContainerRequestContext containerRequest,
       final @Suspended AsyncResponse asyncResponse,
       final @PathParam("topic") String topic,
       final @PathParam("partition") int partition,
       @Valid @NotNull JsonPartitionProduceRequest request
   )  throws Exception {
     produce(
+        containerRequest,
         asyncResponse,
         topic,
         partition,
@@ -135,12 +141,14 @@ public final class PartitionsResource {
   @PerformanceMetric("partition.produce-avro+v2")
   @Consumes({Versions.KAFKA_V2_JSON_AVRO})
   public void produceAvro(
+      final @Context ContainerRequestContext containerRequest,
       final @Suspended AsyncResponse asyncResponse,
       final @PathParam("topic") String topic,
       final @PathParam("partition") int partition,
       @Valid @NotNull SchemaPartitionProduceRequest request
   )  throws Exception {
     produceSchema(
+        containerRequest,
         asyncResponse,
         topic,
         partition,
@@ -153,6 +161,7 @@ public final class PartitionsResource {
   @PerformanceMetric("partition.produce-jsonschema+v2")
   @Consumes({Versions.KAFKA_V2_JSON_JSON_SCHEMA})
   public void produceJsonSchema(
+      final @Context ContainerRequestContext containerRequest,
       final @Suspended AsyncResponse asyncResponse,
       final @PathParam("topic") String topic,
       final @PathParam("partition") int partition,
@@ -161,6 +170,7 @@ public final class PartitionsResource {
     // Validations we can't do generically since they depend on the data format -- schemas need to
     // be available if there are any non-null entries
     produceSchema(
+        containerRequest,
         asyncResponse,
         topic,
         partition,
@@ -173,6 +183,7 @@ public final class PartitionsResource {
   @PerformanceMetric("partition.produce-protobuf+v2")
   @Consumes({Versions.KAFKA_V2_JSON_PROTOBUF})
   public void produceProtobuf(
+      final @Context ContainerRequestContext containerRequest,
       final @Suspended AsyncResponse asyncResponse,
       final @PathParam("topic") String topic,
       final @PathParam("partition") int partition,
@@ -181,6 +192,7 @@ public final class PartitionsResource {
     // Validations we can't do generically since they depend on the data format -- schemas need to
     // be available if there are any non-null entries
     produceSchema(
+        containerRequest,
         asyncResponse,
         topic,
         partition,
@@ -189,6 +201,7 @@ public final class PartitionsResource {
   }
 
   protected <K, V> void produce(
+      final ContainerRequestContext containerRequest,
       final AsyncResponse asyncResponse,
       final String topic,
       final int partition,
@@ -210,6 +223,8 @@ public final class PartitionsResource {
     ctx.getProducerPool().produce(
         topic, partition, format,
         request,
+        containerRequest,
+        ctx,
         new ProducerPool.ProduceRequestCallback() {
           public void onCompletion(
               Integer keySchemaId, Integer valueSchemaId,
@@ -244,6 +259,7 @@ public final class PartitionsResource {
   }
 
   private void produceSchema(
+      ContainerRequestContext containerRequest,
       AsyncResponse asyncResponse,
       String topic,
       int partition,
@@ -252,7 +268,7 @@ public final class PartitionsResource {
   ) throws Exception {
     checkKeySchema(request);
     checkValueSchema(request);
-    produce(asyncResponse, topic, partition, avro, request);
+    produce(containerRequest, asyncResponse, topic, partition, avro, request);
   }
 
   private static void checkKeySchema(ProduceRequest<JsonNode, ?> request) {

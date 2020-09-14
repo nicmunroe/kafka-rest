@@ -18,6 +18,8 @@ package io.confluent.kafkarest;
 import io.confluent.kafkarest.backends.BackendsModule;
 import io.confluent.kafkarest.config.ConfigModule;
 import io.confluent.kafkarest.controllers.ControllersModule;
+import io.confluent.kafkarest.distributedtracing.FooDTHelperNoOpImpl;
+import io.confluent.kafkarest.distributedtracing.FooDistributedTracingHelper;
 import io.confluent.kafkarest.extension.ContextInvocationHandler;
 import io.confluent.kafkarest.extension.InstantConverterProvider;
 import io.confluent.kafkarest.extension.KafkaRestCleanupFilter;
@@ -36,12 +38,16 @@ import java.util.List;
 import java.util.Properties;
 import javax.ws.rs.core.Configurable;
 import org.eclipse.jetty.util.StringUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 /**
  * Utilities for configuring and running an embedded Kafka server.
  */
 public class KafkaRestApplication extends Application<KafkaRestConfig> {
+
+  private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
   List<RestResourceExtension> restResourceExtensions;
 
@@ -87,8 +93,11 @@ public class KafkaRestApplication extends Application<KafkaRestConfig> {
                                     + KafkaRestConfig.ZOOKEEPER_CONNECT_CONFIG
                                     + " needs to be configured");
     }
+
+    FooDistributedTracingHelper dtHelper = generateDistributedTracingHelper(appConfig);
+
     KafkaRestContextProvider.initialize(config, appConfig, producerPool,
-        kafkaConsumerManager, adminClientWrapperInjected, scalaConsumersContext
+        kafkaConsumerManager, adminClientWrapperInjected, scalaConsumersContext, dtHelper
     );
     ContextInvocationHandler contextInvocationHandler = new ContextInvocationHandler();
     KafkaRestContext context =
@@ -109,6 +118,30 @@ public class KafkaRestApplication extends Application<KafkaRestConfig> {
 
     for (RestResourceExtension restResourceExtension : restResourceExtensions) {
       restResourceExtension.register(config, appConfig);
+    }
+
+    dtHelper.register(config, appConfig);
+  }
+
+  protected FooDistributedTracingHelper generateDistributedTracingHelper(KafkaRestConfig appConfig) {
+    try {
+      String dtHelperImplClassname =
+          appConfig.getString(KafkaRestConfig.KAFKA_REST_DISTRIBUTED_TRACING_HELPER_CONFIG);
+      if (dtHelperImplClassname == null || dtHelperImplClassname.trim().isEmpty()) {
+        dtHelperImplClassname = FooDTHelperNoOpImpl.class.getName();
+      }
+      Class<?> dtHelperClass = Class.forName(dtHelperImplClassname);
+      return (FooDistributedTracingHelper) dtHelperClass.getDeclaredConstructor().newInstance();
+    }
+    catch (Exception ex) {
+      logger.warn(
+          "An error occurred while trying to instantiate the desired {}, so {} "
+          + "will be used instead.",
+          KafkaRestConfig.KAFKA_REST_DISTRIBUTED_TRACING_HELPER_CONFIG,
+          FooDTHelperNoOpImpl.class,
+          ex
+      );
+      return new FooDTHelperNoOpImpl();
     }
   }
 

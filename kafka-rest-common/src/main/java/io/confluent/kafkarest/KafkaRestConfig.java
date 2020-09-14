@@ -249,6 +249,8 @@ public class KafkaRestConfig extends RestConfig {
       "client.sasl.kerberos.ticket.renew.window.factor";
   public static final String KAFKA_REST_RESOURCE_EXTENSION_CONFIG =
       "kafka.rest.resource.extension.class";
+  public static final String KAFKA_REST_DISTRIBUTED_TRACING_HELPER_CONFIG =
+      "kafka.rest.distributedtracing.helper.class";
   protected static final String KAFKACLIENT_ZK_SESSION_TIMEOUT_MS_DOC =
       "Zookeeper session timeout";
   protected static final String KAFKACLIENT_INIT_TIMEOUT_DOC =
@@ -318,6 +320,8 @@ public class KafkaRestConfig extends RestConfig {
       + " <code>RestResourceExtension</code> allows you to inject user defined resources "
       + " like filters to Rest Proxy. Typically used to add custom capability like logging, "
       + " security, etc.";
+  protected static final String KAFKA_REST_DISTRIBUTED_TRACING_HELPER_DOC =
+      " TODO: Document me";
   private static final boolean ZOOKEEPER_SET_ACL_DEFAULT = false;
 
   public static final String CRN_AUTHORITY_CONFIG =
@@ -633,6 +637,13 @@ public class KafkaRestConfig extends RestConfig {
         "",
         Importance.LOW,
         KAFKA_REST_RESOURCE_EXTENSION_DOC
+    )
+    .define(
+        KAFKA_REST_DISTRIBUTED_TRACING_HELPER_CONFIG,
+        Type.STRING,
+        "",
+        Importance.LOW,
+        KAFKA_REST_DISTRIBUTED_TRACING_HELPER_DOC
     )
     .define(
         CRN_AUTHORITY_CONFIG,

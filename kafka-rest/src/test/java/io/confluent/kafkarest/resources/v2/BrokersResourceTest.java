@@ -59,6 +59,7 @@ public class BrokersResourceTest
         producerPool,
         null,
         adminClientWrapper,
+        null,
         null
     );
     addResource(new BrokersResource(ctx));

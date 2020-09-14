@@ -34,6 +34,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 
+import javax.ws.rs.container.ContainerRequestContext;
+
 public class SchemaRestProducer implements RestProducer<JsonNode, JsonNode> {
 
   protected final KafkaProducer<Object, Object> producer;
@@ -62,7 +64,9 @@ public class SchemaRestProducer implements RestProducer<JsonNode, JsonNode> {
       ProduceTask task,
       String topic,
       Integer partition,
-      Collection<? extends ProduceRecord<JsonNode, JsonNode>> records
+      Collection<? extends ProduceRecord<JsonNode, JsonNode>> records,
+      ContainerRequestContext containerRequest,
+      KafkaRestContext ctx
   ) {
     ProduceRequest<?, ?> schemaHolder = task.getSchemaHolder();
     ParsedSchema keySchema = null;

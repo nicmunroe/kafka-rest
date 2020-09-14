@@ -15,6 +15,7 @@
 
 package io.confluent.kafkarest;
 
+import io.confluent.kafkarest.distributedtracing.FooDistributedTracingHelper;
 import io.confluent.kafkarest.v2.KafkaConsumerManager;
 import org.apache.kafka.clients.admin.Admin;
 
@@ -22,6 +23,8 @@ public interface KafkaRestContext {
   public KafkaRestConfig getConfig();
 
   public ProducerPool getProducerPool();
+
+  FooDistributedTracingHelper getDtHelper();
 
   @Deprecated
   public ScalaConsumersContext getScalaConsumersContext();

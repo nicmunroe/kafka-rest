@@ -23,17 +23,24 @@ import io.confluent.kafka.schemaregistry.ParsedSchema;
 import io.confluent.kafka.schemaregistry.avro.AvroSchema;
 import io.confluent.kafka.schemaregistry.avro.AvroSchemaProvider;
 import io.confluent.kafka.serializers.KafkaAvroSerializer;
+import io.confluent.kafkarest.DefaultKafkaRestContext;
 import io.confluent.kafkarest.Errors;
+import io.confluent.kafkarest.KafkaRestConfig;
+import io.confluent.kafkarest.KafkaRestContext;
 import io.confluent.kafkarest.ProduceTask;
 import io.confluent.kafkarest.ProducerPool;
 import io.confluent.kafkarest.SchemaRestProducer;
 import io.confluent.kafkarest.converters.AvroConverter;
+import io.confluent.kafkarest.distributedtracing.FooDTHelperNoOpImpl;
 import io.confluent.kafkarest.entities.ProduceRecord;
 import io.confluent.kafkarest.entities.ProduceRequest;
+import io.confluent.rest.RestConfigException;
 import io.confluent.rest.exceptions.RestConstraintViolationException;
 import java.util.Collections;
 import java.util.concurrent.Future;
 import javax.validation.ConstraintViolationException;
+import javax.ws.rs.container.ContainerRequestContext;
+
 import org.apache.kafka.clients.producer.Callback;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
@@ -51,15 +58,22 @@ public class AvroRestProducerTest {
   private SchemaRestProducer restProducer;
   private ProduceRequest<JsonNode, JsonNode> schemaHolder;
   private ProducerPool.ProduceRequestCallback produceCallback;
+  private ContainerRequestContext containerRequest;
+  private KafkaRestContext ctx;
 
   @Before
-  public void setUp() {
+  public void setUp() throws RestConfigException {
     keySerializer = EasyMock.createMock(KafkaAvroSerializer.class);
     valueSerializer = EasyMock.createMock(KafkaAvroSerializer.class);
     producer = EasyMock.createMock(KafkaProducer.class);
     restProducer = new SchemaRestProducer(producer, keySerializer, valueSerializer,
         new AvroSchemaProvider(), new AvroConverter());
     produceCallback = EasyMock.createMock(ProducerPool.ProduceRequestCallback.class);
+    containerRequest = EasyMock.createMock(ContainerRequestContext.class);
+    ctx = new DefaultKafkaRestContext(
+        new KafkaRestConfig(), EasyMock.createMock(ProducerPool.class), null, null, null,
+        new FooDTHelperNoOpImpl()
+    );
   }
 
   @Test(expected= ConstraintViolationException.class)
@@ -76,7 +90,9 @@ public class AvroRestProducerTest {
         new ProduceTask(schemaHolder, 1, produceCallback),
         /* topic= */ "test",
         /* partition= */ null,
-        schemaHolder.getRecords());
+        schemaHolder.getRecords(),
+        containerRequest,
+        ctx);
   }
 
   @Test
@@ -94,7 +110,9 @@ public class AvroRestProducerTest {
           new ProduceTask(schemaHolder, 1, produceCallback),
           /* topic= */ "test",
           /* partition= */ null,
-          schemaHolder.getRecords());
+          schemaHolder.getRecords(),
+          containerRequest,
+          ctx);
     } catch (RestConstraintViolationException e) {
       // expected, but should contain additional info
       assert (e.getMessage().startsWith(Errors.JSON_CONVERSION_MESSAGE));
@@ -140,7 +158,9 @@ public class AvroRestProducerTest {
           new ProduceTask(schemaHolder, 1, produceCallback),
           /* topic= */ "test",
           /* partition= */ null,
-          schemaHolder.getRecords());
+          schemaHolder.getRecords(),
+          containerRequest,
+          ctx);
     }
 
   }

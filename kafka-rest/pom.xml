@@ -20,6 +20,17 @@
     </description>
 
     <dependencies>
+        <!-- TODO: Wingtips deps are temporary for iteration purposes - they should not be part of the kafka-rest repo -->
+        <dependency>
+            <groupId>com.nike.wingtips</groupId>
+            <artifactId>wingtips-java8</artifactId>
+            <version>0.23.1</version>
+        </dependency>
+        <dependency>
+            <groupId>com.nike.wingtips</groupId>
+            <artifactId>wingtips-zipkin2</artifactId>
+            <version>0.23.1</version>
+        </dependency>
         <dependency>
             <groupId>io.confluent</groupId>
             <artifactId>rest-utils</artifactId>

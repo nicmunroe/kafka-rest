@@ -45,7 +45,10 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.container.AsyncResponse;
+import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.Suspended;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -86,11 +89,12 @@ public final class TopicsResource {
   @PerformanceMetric("topic.produce-binary+v2")
   @Consumes({Versions.KAFKA_V2_JSON_BINARY, Versions.KAFKA_V2_JSON})
   public void produceBinary(
+      final @Context ContainerRequestContext containerRequest,
       final @Suspended AsyncResponse asyncResponse,
       @PathParam("topic") String topicName,
       @Valid @NotNull BinaryTopicProduceRequest request
   ) {
-    produce(asyncResponse, topicName, EmbeddedFormat.BINARY, request.toProduceRequest());
+    produce(containerRequest, asyncResponse, topicName, EmbeddedFormat.BINARY, request.toProduceRequest());
   }
 
   @POST
@@ -98,11 +102,12 @@ public final class TopicsResource {
   @PerformanceMetric("topic.produce-json+v2")
   @Consumes({Versions.KAFKA_V2_JSON_JSON})
   public void produceJson(
+      final @Context ContainerRequestContext containerRequest,
       final @Suspended AsyncResponse asyncResponse,
       @PathParam("topic") String topicName,
       @Valid @NotNull JsonTopicProduceRequest request
   ) {
-    produce(asyncResponse, topicName, EmbeddedFormat.JSON, request.toProduceRequest());
+    produce(containerRequest, asyncResponse, topicName, EmbeddedFormat.JSON, request.toProduceRequest());
   }
 
   @POST
@@ -110,13 +115,14 @@ public final class TopicsResource {
   @PerformanceMetric("topic.produce-avro+v2")
   @Consumes({Versions.KAFKA_V2_JSON_AVRO})
   public void produceAvro(
+      final @Context ContainerRequestContext containerRequest,
       final @Suspended AsyncResponse asyncResponse,
       @PathParam("topic") String topicName,
       @Valid @NotNull SchemaTopicProduceRequest request
   ) {
     // Validations we can't do generically since they depend on the data format -- schemas need to
     // be available if there are any non-null entries
-    produceSchema(asyncResponse, topicName, request.toProduceRequest(), EmbeddedFormat.AVRO);
+    produceSchema(containerRequest, asyncResponse, topicName, request.toProduceRequest(), EmbeddedFormat.AVRO);
   }
 
   @POST
@@ -124,11 +130,13 @@ public final class TopicsResource {
   @PerformanceMetric("topic.produce-jsonschema+v2")
   @Consumes({Versions.KAFKA_V2_JSON_JSON_SCHEMA})
   public void produceJsonSchema(
+      final @Context ContainerRequestContext containerRequest,
       final @Suspended AsyncResponse asyncResponse,
       @PathParam("topic") String topicName,
       @Valid @NotNull SchemaTopicProduceRequest request
   ) {
     produceSchema(
+        containerRequest,
         asyncResponse,
         topicName,
         request.toProduceRequest(),
@@ -140,6 +148,7 @@ public final class TopicsResource {
   @PerformanceMetric("topic.produce-protobuf+v2")
   @Consumes({Versions.KAFKA_V2_JSON_PROTOBUF})
   public void produceProtobuf(
+      final @Context ContainerRequestContext containerRequest,
       final @Suspended AsyncResponse asyncResponse,
       @PathParam("topic") String topicName,
       @Valid @NotNull SchemaTopicProduceRequest request
@@ -147,6 +156,7 @@ public final class TopicsResource {
     // Validations we can't do generically since they depend on the data format -- schemas need to
     // be available if there are any non-null entries
     produceSchema(
+        containerRequest,
         asyncResponse,
         topicName,
         request.toProduceRequest(),
@@ -154,6 +164,7 @@ public final class TopicsResource {
   }
 
   public <K, V> void produce(
+      final ContainerRequestContext containerRequest,
       final AsyncResponse asyncResponse,
       final String topicName,
       final EmbeddedFormat format,
@@ -165,6 +176,8 @@ public final class TopicsResource {
     ctx.getProducerPool().produce(
         topicName, null, format,
         request,
+        containerRequest,
+        ctx,
         new ProducerPool.ProduceRequestCallback() {
           public void onCompletion(
               Integer keySchemaId, Integer valueSchemaId,
@@ -196,6 +209,7 @@ public final class TopicsResource {
   }
 
   private void produceSchema(
+      ContainerRequestContext containerRequest,
       AsyncResponse asyncResponse,
       String topicName,
       ProduceRequest<JsonNode, JsonNode> request,
@@ -203,7 +217,7 @@ public final class TopicsResource {
   ) {
     checkKeySchema(request);
     checkValueSchema(request);
-    produce(asyncResponse, topicName, jsonschema, request);
+    produce(containerRequest, asyncResponse, topicName, jsonschema, request);
   }
 
   private static void checkKeySchema(ProduceRequest<JsonNode, ?> request) {
